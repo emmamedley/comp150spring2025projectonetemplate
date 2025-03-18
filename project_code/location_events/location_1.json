@@ -1,4 +1,4 @@
-# src/game.py
+#src/game.py
 import random
 import time
 
@@ -198,3 +198,228 @@ class Game:
                 print(f"  - {achievement}")
         else:
             print("\nNo special achievements earned this game.")
+
+            import unittest
+            from unittest.mock import patch, MagicMock
+            import sys
+            import io
+            from src.game import Game
+            
+            class TestGame(unittest.TestCase):
+                def setUp(self):
+                    """Set up test fixtures for each test."""
+                    # Create a mock party
+                    self.mock_party = MagicMock()
+                    self.mock_party.location = "Winterfell"
+                    self.mock_party.members = [MagicMock(), MagicMock(), MagicMock()]
+                    self.mock_party.resources = {
+                        "gold": 100,
+                        "food": 20,
+                        "medicine": 5
+                    }
+                    self.mock_party.reputation = {
+                        "North": 10,
+                        "South": 5
+                    }
+                    self.mock_party.is_alive.return_value = True
+                    
+                    # Create the game instance
+                    self.game = Game(self.mock_party)
+                    
+                    # Mock event manager
+                    self.mock_event_manager = MagicMock()
+                    self.game.event_manager = self.mock_event_manager
+                    
+                    # Create a mock event
+                    self.mock_event = MagicMock()
+                    self.mock_event_manager.get_random_event.return_value = self.mock_event
+            
+                def test_game_initialization(self):
+                    """Test that the game initializes correctly."""
+                    self.assertEqual(self.game.party, self.mock_party)
+                    self.assertEqual(self.game.turn, 1)
+                    self.assertEqual(self.game.max_turns, 30)
+                    self.assertFalse(self.game.game_over)
+                    self.assertIn("Winterfell", self.game.locations)
+                    self.assertIn("King's Landing", self.game.locations)
+                    self.assertEqual(len(self.game.locations), 11)
+            
+                @patch('builtins.input', side_effect=['n', 'n'])
+                @patch('sys.stdout', new_callable=io.StringIO)
+                def test_process_turn(self, mock_stdout, mock_input):
+                    """Test that a turn is processed correctly."""
+                    self.game._process_turn()
+                    
+                    # Check that methods were called
+                    self.mock_party.display_status.assert_called_once()
+                    
+                    # Check output contains expected turn information
+                    output = mock_stdout.getvalue()
+                    self.assertIn("TURN 1", output)
+                    self.assertIn("Winterfell", output)
+                    self.assertIn("Winter is", output)
+                    
+                def test_consume_resources_sufficient(self):
+                    """Test resource consumption when food is sufficient."""
+                    initial_food = self.mock_party.resources['food']
+                    members_count = len(self.mock_party.members)
+                    food_needed = members_count // 2 + 1
+                    
+                    with patch('sys.stdout', new_callable=io.StringIO):
+                        self.game._consume_resources()
+                    
+                    # Check that food was consumed
+                    self.assertEqual(self.mock_party.resources['food'], initial_food - food_needed)
+                    
+                    # Verify no damage was taken
+                    for member in self.mock_party.members:
+                        member.take_damage.assert_not_called()
+            
+                def test_consume_resources_insufficient(self):
+                    """Test resource consumption when food is insufficient."""
+                    # Set food to insufficient level
+                    self.mock_party.resources['food'] = 0
+                    
+                    with patch('sys.stdout', new_callable=io.StringIO):
+                        self.game._consume_resources()
+                    
+                    # Verify each party member took damage
+                    for member in self.mock_party.members:
+                        member.take_damage.assert_called_with(1)
+            
+                @patch('builtins.input', side_effect=['y', '1'])
+                @patch('random.sample', return_value=["King's Landing", "The Wall", "Riverrun"])
+                @patch('random.random', return_value=0.5)  # No ambush
+                def test_travel_option_successful(self, mock_random, mock_sample, mock_input):
+                    """Test successful travel to a new location."""
+                    with patch('sys.stdout', new_callable=io.StringIO):
+                        self.game._travel_option()
+                    
+                    # Verify location was updated
+                    self.assertEqual(self.mock_party.location, "King's Landing")
+                    
+                    # Verify no event was triggered (ambush chance was 0.5, threshold is 0.3)
+                    self.mock_event.execute.assert_not_called()
+            
+                @patch('builtins.input', side_effect=['y', '1'])
+                @patch('random.sample', return_value=["King's Landing", "The Wall", "Riverrun"])
+                @patch('random.random', return_value=0.2)  # Triggers ambush
+                def test_travel_option_with_ambush(self, mock_random, mock_sample, mock_input):
+                    """Test travel with an ambush event."""
+                    with patch('sys.stdout', new_callable=io.StringIO):
+                        self.game._travel_option()
+                    
+                    # Verify location was updated despite ambush
+                    self.assertEqual(self.mock_party.location, "King's Landing")
+                    
+                    # Verify event was triggered
+                    self.mock_event.execute.assert_called_once_with(self.mock_party)
+            
+                @patch('builtins.input', side_effect=['n'])
+                def test_travel_option_stay(self, mock_input):
+                    """Test choosing to stay at current location."""
+                    original_location = self.mock_party.location
+                    
+                    with patch('sys.stdout', new_callable=io.StringIO):
+                        self.game._travel_option()
+                    
+                    # Verify location was not changed
+                    self.assertEqual(self.mock_party.location, original_location)
+            
+                def test_random_event(self):
+                    """Test that a random event is executed."""
+                    with patch('sys.stdout', new_callable=io.StringIO), patch('time.sleep'):
+                        self.game._random_event()
+                    
+                    # Verify event manager was used to get a random event
+                    self.mock_event_manager.get_random_event.assert_called_once()
+                    
+                    # Verify event was executed
+                    self.mock_event.execute.assert_called_once_with(self.mock_party)
+            
+                def test_calculate_score(self):
+                    """Test score calculation."""
+                    # Set up test conditions
+                    alive_members = [member for member in self.mock_party.members if member.is_alive.return_value]
+                    for region, value in self.mock_party.reputation.items():
+                        if region == "North":
+                            self.mock_party.reputation[region] = 60  # Should give +100 points
+                    
+                    score = self.game._calculate_score()
+                    
+                    # Expected score components
+                    expected_score = (
+                        len(alive_members) * 100 +  # Surviving members
+                        self.mock_party.resources["gold"] // 10 +  # Gold
+                        self.mock_party.resources["food"] * 5 +  # Food
+                        self.mock_party.resources["medicine"] * 20 +  # Medicine
+                        100 +  # North reputation > 50
+                        self.game.turn * 10  # Turns survived
+                    )
+                    
+                    self.assertEqual(score, expected_score)
+            
+                @patch('builtins.input', side_effect=['y', 'n'])
+                def test_start_game_player_quit(self, mock_input):
+                    """Test game ending when player chooses to quit."""
+                    # Mock event manager creation
+                    with patch('src.events.EventManager', return_value=self.mock_event_manager), \
+                         patch('sys.stdout', new_callable=io.StringIO):
+                        self.game.start()
+                    
+                    # Check game ended
+                    self.assertTrue(self.game.game_over)
+            
+                @patch('builtins.input', return_value='y')
+                def test_start_game_party_death(self, mock_input):
+                    """Test game ending when the party dies."""
+                    # Party dies after first turn
+                    self.mock_party.is_alive.side_effect = [True, False]
+                    
+                    # Mock event manager creation
+                    with patch('src.events.EventManager', return_value=self.mock_event_manager), \
+                         patch('sys.stdout', new_callable=io.StringIO):
+                        self.game.start()
+                    
+                    # Check game ended
+                    self.assertTrue(self.game.game_over)
+            
+                @patch('builtins.input', return_value='y')
+                def test_start_game_max_turns(self, mock_input):
+                    """Test game ending when maximum turns are reached."""
+                    # Set game to last turn
+                    self.game.turn = self.game.max_turns
+                    
+                    # Mock event manager creation
+                    with patch('src.events.EventManager', return_value=self.mock_event_manager), \
+                         patch('sys.stdout', new_callable=io.StringIO):
+                        self.game.start()
+                    
+                    # Check game ended
+                    self.assertTrue(self.game.game_over)
+            
+                def test_display_achievements(self):
+                    """Test achievement display."""
+                    # Set up conditions for achievements
+                    self.mock_party.members = [MagicMock() for _ in range(5)]
+                    self.mock_party.resources["gold"] = 350
+                    self.mock_party.reputation = {"North": 10, "South": 5, "East": 3}
+                    self.game.turn = self.game.max_turns
+                    
+                    # Capture output
+                    with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+                        self.game._display_achievements()
+                    
+                    output = mock_stdout.getvalue()
+                    
+                    # Check that achievements were displayed
+                    self.assertIn("Achievements Earned:", output)
+                    self.assertIn("The Gatherer", output)
+                    self.assertIn("Master of Coin", output)
+                    self.assertIn("The Diplomat", output)
+                    self.assertIn("Winter's Bane", output)
+            
+            
+            if __name__ == '__main__':
+                unittest.main()
+            
