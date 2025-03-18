@@ -1,438 +1,200 @@
-[{
-  "primary_attribute": "Intelligence",
-  "secondary_attribute": "Strength",
-  "prompt_text": "A mysterious door blocks your path, with a riddle inscribed. What will you do?",
-  "pass": {
-    "message": "You solved the riddle and pushed the door open. You may proceed."
-  },
-  "fail": {
-    "message": "You failed to solve the riddle and push the door open. You must find another way."
-  },
-  "partial_pass": {
-    "message": "You managed to solve the riddle or push the door, but not both. You made some progress, but the door remains closed."
-  }
-},
-  {
-    "primary_attribute": "Intelligence",
-    "secondary_attribute": "Strength",
-    "prompt_text": "A mysterious door blocks your path, with a riddle inscribed. What will you do?",
-    "pass": {
-      "message": "You solved the riddle and pushed the door open. You may proceed."
-    },
-    "fail": {
-      "message": "You failed to solve the riddle and push the door open. You must find another way."
-    },
-    "partial_pass": {
-      "message": "You managed to solve the riddle or push the door, but not both. You made some progress, but the door remains closed."
-    }
-  }
+# src/game.py
+import random
+import time
 
-
-  locations: {
-    "Winterfell": [
-      {
-        "primary_attribute": "Intelligence",
-        "secondary_attribute": "Stealth",
-        "prompt_text": "The Godswood of Winterfell holds many secrets. You've heard whispers of hidden Stark treasures beneath the Heart Tree. How will you discover them?",
-        "pass": {
-          "message": "Through your knowledge of Old Northern legends and careful observation, you uncover a small opening beneath the Heart Tree, revealing a cache of Valyrian steel daggers and ancient scrolls."
-        },
-        "fail": {
-          "message": "Your clumsy search alerts the guards. They escort you from the Godswood, warning never to disturb the sacred place again."
-        },
-        "partial_pass": {
-          "message": "You find markings that suggest something is hidden, but can't quite determine how to access it. Perhaps someone with knowledge of Stark history could help."
-        }
-      },
-      {
-        "primary_attribute": "Strength",
-        "secondary_attribute": "Endurance",
-        "prompt_text": "Winter has come to Winterfell. The battlements need clearing of dangerous ice before they collapse. The task requires working in the biting cold for hours.",
-        "pass": {
-          "message": "You clear the ice systematically, saving the battlements from collapse and earning the respect of the Stark household guards."
-        },
-        "fail": {
-          "message": "The cold proves too much, and your hands grow numb. You retreat inside before completing the task, leaving the battlements vulnerable."
-        },
-        "partial_pass": {
-          "message": "You clear the most dangerous sections before the cold forces you to stop. The battlements are safer, but not completely secure."
-        }
-      },
-      {
-        "primary_attribute": "Charisma",
-        "secondary_attribute": "Intelligence",
-        "prompt_text": "Lord Stark is holding court to settle a dispute between two Northern houses. You have information that could help, but speaking out of turn is frowned upon.",
-        "pass": {
-          "message": "You respectfully request permission to speak and present your information clearly. Lord Stark thanks you for your contribution, which helps settle the dispute justly."
-        },
-        "fail": {
-          "message": "Your interruption is seen as disrespectful. Lord Stark has you removed from the hall, and your information goes unheard."
-        },
-        "partial_pass": {
-          "message": "You manage to convey your information, but your delivery lacks tact. The information helps, but Lord Stark reminds you to mind courtly protocols in the future."
-        }
-      }
-    ],
-    
-    "King's Landing": [
-      {
-        "primary_attribute": "Cunning",
-        "secondary_attribute": "Charisma",
-        "prompt_text": "A feast is being held in the Red Keep. You overhear whispers of a plot against the crown. How do you handle this sensitive information?",
-        "pass": {
-          "message": "Through subtle conversation and careful maneuvering, you identify the conspirators and discreetly inform the appropriate authorities without revealing your source."
-        },
-        "fail": {
-          "message": "Your clumsy inquiries alert the conspirators. They spread false rumors about you, and you find yourself unwelcome at court."
-        },
-        "partial_pass": {
-          "message": "You learn some details of the plot but not enough to identify the conspirators. The information you provide helps increase security, but the threat remains."
-        }
-      },
-      {
-        "primary_attribute": "Stealth",
-        "secondary_attribute": "Intelligence",
-        "prompt_text": "Important documents are kept in the Tower of the Hand. You need to view them without permission to uncover the truth about a matter of grave importance.",
-        "pass": {
-          "message": "You successfully slip past the guards, locate the documents, memorize their contents, and leave without detection, gaining crucial information."
-        },
-        "fail": {
-          "message": "You're caught by the guards and thrown into the Black Cells, accused of espionage against the crown."
-        },
-        "partial_pass": {
-          "message": "You reach the documents but only have time to glimpse them before nearly being discovered. You escape, but with incomplete information."
-        }
-      },
-      {
-        "primary_attribute": "Charisma",
-        "secondary_attribute": "Cunning",
-        "prompt_text": "You need to gain access to a closed Small Council meeting. The guards at the door are strictly following orders about who may enter.",
-        "pass": {
-          "message": "With a combination of confidence, persuasive half-truths, and knowledge of courtly protocols, you convince the guards you have legitimate business inside."
-        },
-        "fail": {
-          "message": "The guards see through your deception and threaten to report you to the City Watch for attempting to interfere with royal business."
-        },
-        "partial_pass": {
-          "message": "You cannot get inside, but you convince one of the guards to deliver a message to someone within, partially achieving your goal."
-        }
-      }
-    ],
-    
-    "The Wall": [
-      {
-        "primary_attribute": "Endurance",
-        "secondary_attribute": "Combat",
-        "prompt_text": "A wildling raid threatens Castle Black. The Night's Watch is undermanned, and you must help defend the gate through the night in bitter cold.",
-        "pass": {
-          "message": "You hold your position through the night, fighting off waves of attackers. Your endurance inspires others, and the Wall stands unbreached at dawn."
-        },
-        "fail": {
-          "message": "The cold and relentless attacks overwhelm you. You abandon your post, allowing wildlings to gain a foothold before others can push them back."
-        },
-        "partial_pass": {
-          "message": "You fight bravely but are wounded. You hold out long enough for reinforcements to arrive, though some wildlings breach the outer defenses."
-        }
-      },
-      {
-        "primary_attribute": "Knowledge",
-        "secondary_attribute": "Intelligence",
-        "prompt_text": "The Night's Watch library at Castle Black contains ancient texts about the White Walkers. You must find specific information about their weaknesses.",
-        "pass": {
-          "message": "After hours of careful research, you uncover forgotten manuscripts that detail the White Walkers' vulnerability to dragonglass and Valyrian steel."
-        },
-        "fail": {
-          "message": "The disorganized library defeats you. You find nothing of value and waste precious time that could have been spent preparing defenses."
-        },
-        "partial_pass": {
-          "message": "You find references to White Walker weaknesses, but the crucial details are in texts written in Old Valyrian that you cannot fully translate."
-        }
-      },
-      {
-        "primary_attribute": "Strength",
-        "secondary_attribute": "Leadership",
-        "prompt_text": "The winch elevator that carries men to the top of the Wall has broken. Supplies urgently needed above must be hauled up manually.",
-        "pass": {
-          "message": "You organize an efficient system and take the heaviest loads yourself. The supplies reach the top in time, preventing disaster."
-        },
-        "fail": {
-          "message": "The task proves too difficult. The supplies don't reach the top in time, and the Watch suffers casualties that could have been prevented."
-        },
-        "partial_pass": {
-          "message": "You get the most critical supplies to the top, but the effort exhausts you and your team, leaving you vulnerable for the coming day."
-        }
-      }
-    ],
-    
-    "Dragonstone": [
-      {
-        "primary_attribute": "Intelligence",
-        "secondary_attribute": "Knowledge",
-        "prompt_text": "The caves beneath Dragonstone contain deposits of dragonglass. You must find the largest deposit to mine for the coming war against the dead.",
-        "pass": {
-          "message": "Using geological knowledge and careful exploration, you locate an enormous vein of dragonglass, enough to forge weapons for an entire army."
-        },
-        "fail": {
-          "message": "You become lost in the winding caves and find no significant deposits. Hours are wasted, and you return empty-handed."
-        },
-        "partial_pass": {
-          "message": "You find smaller deposits of dragonglass, enough for a few dozen weapons, but not the motherlode rumored to exist."
-        }
-      },
-      {
-        "primary_attribute": "Leadership",
-        "secondary_attribute": "Charisma",
-        "prompt_text": "Tensions rise between Northern and Targaryen forces on Dragonstone. You must prevent a clash that could fracture the alliance against the Night King.",
-        "pass": {
-          "message": "Your diplomatic intervention calms tempers on both sides. You help them focus on their common enemy, strengthening the alliance."
-        },
-        "fail": {
-          "message": "Your intervention only inflames tensions further. A fight breaks out, causing injuries and deepening the divide between the forces."
-        },
-        "partial_pass": {
-          "message": "You prevent immediate violence, but the underlying tensions remain. The alliance holds, but is fragile and uncertain."
-        }
-      },
-      {
-        "primary_attribute": "Intelligence",
-        "secondary_attribute": "Leadership",
-        "prompt_text": "The Painted Table map of Westeros needs to be updated with current information about troop movements and castle allegiances for war planning.",
-        "pass": {
-          "message": "You create an accurate, detailed update to the map that reveals crucial strategic opportunities previously overlooked."
-        },
-        "fail": {
-          "message": "Your updates to the map contain significant errors that could lead to disastrous military decisions if followed."
-        },
-        "partial_pass": {
-          "message": "Your map updates are mostly accurate but incomplete, providing some strategic value but missing important details."
-        }
-      }
-    ],
-    
-    "Beyond the Wall": [
-      {
-        "primary_attribute": "Survival",
-        "secondary_attribute": "Endurance",
-        "prompt_text": "A blizzard descends suddenly while you're scouting beyond the Wall. You must find shelter and survive until it passes.",
-        "pass": {
-          "message": "You quickly construct a snow shelter, properly insulate yourself, and survive the three-day storm with minimal hardship."
-        },
-        "fail": {
-          "message": "The cold overwhelms you. You're found half-frozen by your companions and barely survive after losing several fingers to frostbite."
-        },
-        "partial_pass": {
-          "message": "You endure the blizzard but suffer from the cold. You'll need time to recover from mild frostbite before continuing your journey."
-        }
-      },
-      {
-        "primary_attribute": "Stealth",
-        "secondary_attribute": "Intelligence",
-        "prompt_text": "You've spotted a White Walker patrol. You need to observe their movements without being detected to bring information back to the Wall.",
-        "pass": {
-          "message": "Moving silently and staying downwind, you track the patrol for hours, learning their patterns before safely withdrawing with valuable intelligence."
-        },
-        "fail": {
-          "message": "The White Walkers sense your presence. You barely escape with your life and learn nothing of value."
-        },
-        "partial_pass": {
-          "message": "You observe the patrol briefly before needing to retreat. You gather some useful information, but many questions remain unanswered."
-        }
-      },
-      {
-        "primary_attribute": "Combat",
-        "secondary_attribute": "Courage",
-        "prompt_text": "A small group of wights has separated from the main army. You have a chance to capture one to prove their existence to the southern lords.",
-        "pass": {
-          "message": "With precise attacks, you destroy all but one wight, which you successfully restrain and secure for transport south."
-        },
-        "fail": {
-          "message": "The wights overwhelm your group. Several of your companions are killed, and you retreat empty-handed with serious injuries."
-        },
-        "partial_pass": {
-          "message": "You destroy the wights but are unable to capture one intact. You collect body parts that still twitch with unnatural movement as partial evidence."
-        }
-      }
-    ],
-    
-    "Braavos": [
-      {
-        "primary_attribute": "Stealth",
-        "secondary_attribute": "Perception",
-        "prompt_text": "You need information from the House of Black and White, but few outsiders are welcome there. How do you proceed?",
-        "pass": {
-          "message": "Adopting an unassuming disguise and observing the patterns of the temple, you slip inside during a ceremony and access the information without alerting the Faceless Men."
-        },
-        "fail": {
-          "message": "Your intrusion is immediately detected. You flee from the temple with the Faceless Men aware of your identity and intentions."
-        },
-        "partial_pass": {
-          "message": "You learn some information by observing from outside and questioning those who leave, but the deeper secrets of the temple remain hidden from you."
-        }
-      },
-      {
-        "primary_attribute": "Charisma",
-        "secondary_attribute": "Cunning",
-        "prompt_text": "You need a loan from the Iron Bank of Braavos for your urgent cause. The bankers are notoriously cautious and pragmatic.",
-        "pass": {
-          "message": "Your compelling presentation of facts, strategic flattery, and demonstration of your cause's viability secures the loan on favorable terms."
-        },
-        "fail": {
-          "message": "The Iron Bank representatives dismiss your request outright, seeing no benefit in supporting your cause."
-        },
-        "partial_pass": {
-          "message": "The Iron Bank offers a smaller loan than requested, with strict conditions and high interest. It's something, but far from ideal."
-        }
-      },
-      {
-        "primary_attribute": "Combat",
-        "secondary_attribute": "Agility",
-        "prompt_text": "You're challenged to a duel by a Braavosi water dancer who believes you've insulted his honor. The duel will take place on a narrow bridge over a canal.",
-        "pass": {
-          "message": "You adapt to the Braavosi fighting style and use the narrow terrain to your advantage, defeating your opponent with grace that earns respect from onlookers."
-        },
-        "fail": {
-          "message": "The water dancer's quick, precise style overwhelms you. You suffer a humiliating defeat and a minor wound that will take weeks to heal."
-        },
-        "partial_pass": {
-          "message": "The duel ends in a draw after both you and the water dancer recognize each other's skill. Honor is satisfied, though neither gains prestige."
-        }
-      }
-    ],
-    
-    "The Eyrie": [
-      {
-        "primary_attribute": "Endurance",
-        "secondary_attribute": "Strength",
-        "prompt_text": "The path to the Eyrie through the Mountains of the Moon is treacherous and exhausting. A snowstorm makes the ascent even more dangerous.",
-        "pass": {
-          "message": "Despite the harsh conditions, you lead your group safely up the mountain path, reaching the Bloody Gate without casualties."
-        },
-        "fail": {
-          "message": "The journey proves too difficult. Two members of your party suffer injuries from falls, and you're forced to turn back."
-        },
-        "partial_pass": {
-          "message": "You reach the Bloody Gate, but the journey has exhausted you and your companions. You'll need a full day of rest before you're fit for any challenges ahead."
-        }
-      },
-      {
-        "primary_attribute": "Intelligence",
-        "secondary_attribute": "Perception",
-        "prompt_text": "You suspect a spy in the Eyrie is passing information to enemies. You need to identify them without alerting them to your suspicions.",
-        "pass": {
-          "message": "Through careful observation and a clever trap of false information, you identify the spy and gather evidence of their communications."
-        },
-        "fail": {
-          "message": "Your investigation is too obvious. The spy covers their tracks and frames an innocent servant, who is executed before the truth can be discovered."
-        },
-        "partial_pass": {
-          "message": "You narrow down the suspects but can't identify the spy with certainty. At least you now know which communications are likely being compromised."
-        }
-      },
-      {
-        "primary_attribute": "Charisma",
-        "secondary_attribute": "Cunning",
-        "prompt_text": "You need to persuade the young Lord of the Eyrie to support your cause, but he is sheltered, immature, and heavily influenced by his manipulative advisors.",
-        "pass": {
-          "message": "You connect with the young lord through patience and understanding, then inspire him with tales of heroism that appeal to his desire for respect. He pledges his support."
-        },
-        "fail": {
-          "message": "Your approach alienates the young lord, who throws a tantrum and orders you to leave the Eyrie immediately."
-        },
-        "partial_pass": {
-          "message": "The young lord is intrigued by your cause but remains noncommittal. He allows you to stay as a guest while he considers your request."
-        }
-      }
-    ],
-    
-    "The Iron Islands": [
-      {
-        "primary_attribute": "Strength",
-        "secondary_attribute": "Endurance",
-        "prompt_text": "A fierce storm has damaged several ships in the harbor. The captains are organizing a desperate effort to secure them before they're destroyed completely.",
-        "pass": {
-          "message": "You work tirelessly through the storm, helping to save three ships from destruction. The Ironborn captains acknowledge your strength and dedication."
-        },
-        "fail": {
-          "message": "The combination of heavy lifting and rough seas proves too much. You're washed overboard and narrowly escape drowning, while the ships are lost."
-        },
-        "partial_pass": {
-          "message": "You help secure one ship before exhaustion forces you to stop. Your contribution is noted, but some Ironborn mutter about mainlanders' weakness."
-        }
-      },
-      {
-        "primary_attribute": "Combat",
-        "secondary_attribute": "Courage",
-        "prompt_text": "Your ship is attacked by a rival Ironborn captain who refuses to recognize the new leadership. You're among the boarding party that must secure the enemy vessel.",
-        "pass": {
-          "message": "You fight fearlessly across the rain-slicked decks, defeating multiple opponents and personally capturing the rival captain."
-        },
-        "fail": {
-          "message": "The enemy fighters push your boarding party back. You're forced to retreat to your ship with heavy casualties and failure weighing on your conscience."
-        },
-        "partial_pass": {
-          "message": "The battle ends in a stalemate. Both ships disengage with casualties, and the rival captain escapes to fight another day."
-        }
-      },
-      {
-        "primary_attribute": "Leadership",
-        "secondary_attribute": "Intimidation",
-        "prompt_text": "Dissent is growing among the Ironborn crews under your command. They question following an outsider and whisper about returning to the Old Way of raiding.",
-        "pass": {
-          "message": "You address the crews with a powerful combination of respect for their traditions and clear consequences for disobedience. The dissent transforms into wary respect."
-        },
-        "fail": {
-          "message": "Your attempts to assert control backfire. Open defiance erupts, and three ships desert your fleet during the night."
-        },
-        "partial_pass": {
-          "message": "You maintain tenuous control, but it's clear the crews follow you out of necessity rather than respect. You'll need to prove yourself in battle to truly win them over."
-        }
-      }
-    ],
-    
-    "Dorne": [
-      {
-        "primary_attribute": "Perception",
-        "secondary_attribute": "Intelligence",
-        "prompt_text": "The food at the feast in Sunspear seems perfectly normal, but you've heard rumors of poison being a favorite Dornish weapon. Can you detect any danger?",
-        "pass": {
-          "message": "Your careful observation reveals a servant paying special attention to your cup. You subtly avoid drinking from it and later confirm it contained a subtle poison."
-        },
-        "fail": {
-          "message": "You notice nothing unusual and eat freely. Hours later, you fall violently ill. Though you survive, you're weakened for days afterward."
-        },
-        "partial_pass": {
-          "message": "Something seems suspicious, so you eat and drink sparingly. You experience mild symptoms later, but nothing debilitating. Your caution saved you from worse effects."
-        }
-      },
-      {
-        "primary_attribute": "Charisma",
-        "secondary_attribute": "Knowledge",
-        "prompt_text": "You need to negotiate an alliance with the notoriously independent Dornish. Previous envoys have failed to understand their unique culture and history.",
-        "pass": {
-          "message": "Your extensive knowledge of Dornish history and respectful approach impresses the Dornish nobles. They agree to consider your proposed alliance favorably."
-        },
-        "fail": {
-          "message": "Despite your efforts, you inadvertently offend Dornish sensibilities. Your proposal is rejected, and you're asked to leave Sunspear promptly."
-        },
-        "partial_pass": {
-          "message": "The Dornish appreciate your attempt to understand their culture, but remain skeptical of your proposals. They offer a limited non-aggression pact instead of a full alliance."
-        }
-      },
-      {
-        "primary_attribute": "Survival",
-        "secondary_attribute": "Endurance",
-        "prompt_text": "You must cross a stretch of the harsh Dornish desert to deliver an urgent message. The heat is brutal, water is scarce, and sand storms are common.",
-        "pass": {
-          "message": "Using desert survival techniques, you navigate the hazardous terrain efficiently, reaching your destination in good condition despite the challenges."
-        },
-        "fail": {
-          "message": "The desert overwhelms you. You're found by a Dornish patrol, severely dehydrated and suffering from heat stroke, your mission unfulfilled."
-        },
-        "partial_pass": {
-          "message": "You reach your destination, but arrive delirious from heat and dehydration. The message is delivered, but you require several days of recovery."
-        }
-      }
-    ]
-  }
-};
-]
+class Game:
+    def __init__(self, party):
+        self.party = party
+        self.turn = 1
+        self.max_turns = 30
+        self.event_manager = None  # Will be initialized in start()
+        self.game_over = False
+        self.locations = [
+            "Winterfell", "King's Landing", "The Wall", "Riverrun",
+            "Casterly Rock", "The Eyrie", "Dragonstone", "Highgarden",
+            "Dorne", "The Iron Islands", "Braavos"
+        ]
+        
+    def start(self):
+        """Start the game loop."""
+        from src.events import EventManager
+        self.event_manager = EventManager()
+        
+        while not self.game_over and self.turn <= self.max_turns:
+            self._process_turn()
+            
+            # Check if party is still alive
+            if not self.party.is_alive():
+                self._end_game("Your entire party has perished. Winter has come for you.")
+                break
+                
+            # Check if max turns reached
+            if self.turn > self.max_turns:
+                self._end_game("You have survived to see the coming of spring.")
+                break
+                
+            # Ask player to continue
+            choice = input("\nContinue to next turn? (y/n): ").lower()
+            if choice != 'y':
+                self._end_game("You have chosen to end your journey.")
+                break
+                
+            self.turn += 1
+            
+    def _process_turn(self):
+        """Process a single game turn."""
+        self._display_turn_info()
+        
+        # Resource consumption
+        self._consume_resources()
+        
+        # Travel option
+        self._travel_option()
+        
+        # Random event
+        self._random_event()
+        
+        # End of turn status
+        self.party.display_status()
+        
+    def _display_turn_info(self):
+        """Display information at the start of a turn."""
+        print("\n" + "=" * 50)
+        print(f"TURN {self.turn} | Location: {self.party.location}")
+        print("=" * 50)
+        
+        # Winter progress
+        winter_progress = min(100, (self.turn / self.max_turns) * 100)
+        print(f"Winter is {winter_progress:.1f}% here...")
+        
+        # Show abbreviated party status
+        print(f"Party: {len([m for m in self.party.members if m.is_alive()])}/{len(self.party.members)} members alive")
+        print(f"Resources: Gold {self.party.resources['gold']}, Food {self.party.resources['food']}, Medicine {self.party.resources['medicine']}")
+        print("=" * 50 + "\n")
+        
+    def _consume_resources(self):
+        """Consume resources for the turn."""
+        food_needed = len(self.party.members) // 2 + 1
+        
+        print(f"Your party requires {food_needed} food for this turn.")
+        
+        if self.party.resources['food'] >= food_needed:
+            self.party.resources['food'] -= food_needed
+            print("Your party eats well.")
+        else:
+            print("You don't have enough food! Party members take damage from hunger.")
+            for member in self.party.members:
+                if member.is_alive():
+                    member.take_damage(1)
+                    print(f"{member.name} takes 1 damage from hunger.")
+        
+    def _travel_option(self):
+        """Give the player an option to travel to a new location."""
+        print("\nWould you like to travel to a new location?")
+        choice = input("(y/n): ").lower()
+        
+        if choice == 'y':
+            # Generate 3 random destinations (excluding current location)
+            possible_destinations = [loc for loc in self.locations if loc != self.party.location]
+            destinations = random.sample(possible_destinations, min(3, len(possible_destinations)))
+            
+            print("\nChoose a destination:")
+            for i, destination in enumerate(destinations, 1):
+                print(f"{i}. {destination}")
+                
+            try:
+                travel_choice = int(input("Enter your choice (or 0 to stay): "))
+                if 1 <= travel_choice <= len(destinations):
+                    new_location = destinations[travel_choice - 1]
+                    print(f"\nTraveling to {new_location}...")
+                    
+                    # Travel event (chance of ambush or delay)
+                    if random.random() < 0.3:
+                        print("Your journey is interrupted!")
+                        danger_event = self.event_manager.get_random_event()
+                        danger_event.execute(self.party)
+                    
+                    # Complete travel
+                    self.party.location = new_location
+                    print(f"You have arrived at {new_location}.")
+                else:
+                    print("\nDeciding to stay at your current location.")
+            except ValueError:
+                print("\nInvalid choice. Staying at current location.")
+        else:
+            print("\nYou decide to stay at your current location.")
+            
+    def _random_event(self):
+        """Generate and execute a random event for this turn."""
+        print("\nAn event occurs...")
+        time.sleep(1)
+        
+        event = self.event_manager.get_random_event()
+        event.execute(self.party)
+        
+    def _end_game(self, message):
+        """End the game with the given message."""
+        print("\n" + "=" * 50)
+        print("GAME OVER")
+        print("=" * 50)
+        print(message)
+        
+        # Calculate final score
+        score = self._calculate_score()
+        
+        print("\nFinal Score:", score)
+        
+        # Display achievements
+        self._display_achievements()
+        
+        self.game_over = True
+        
+    def _calculate_score(self):
+        """Calculate the final score based on various factors."""
+        score = 0
+        
+        # Surviving members
+        surviving_members = len([m for m in self.party.members if m.is_alive()])
+        score += surviving_members * 100
+        
+        # Resources left
+        score += self.party.resources["gold"] // 10
+        score += self.party.resources["food"] * 5
+        score += self.party.resources["medicine"] * 20
+        
+        # Reputation bonus
+        for region, value in self.party.reputation.items():
+            if value > 20:
+                score += 50
+            elif value > 50:
+                score += 100
+                
+        # Turns survived
+        score += self.turn * 10
+        
+        return score
+        
+    def _display_achievements(self):
+        """Display special achievements earned during the game."""
+        achievements = []
+        
+        # Check for various achievements
+        if len(self.party.members) >= 5:
+            achievements.append("The Gatherer - Recruited a large party")
+            
+        if self.party.resources["gold"] > 300:
+            achievements.append("Master of Coin - Accumulated significant wealth")
+            
+        if all(value > 0 for value in self.party.reputation.values()):
+            achievements.append("The Diplomat - Maintained positive relations with all regions")
+            
+        if self.turn >= self.max_turns:
+            achievements.append("Winter's Bane - Survived until spring")
+            
+        # Display achievements
+        if achievements:
+            print("\nAchievements Earned:")
+            for achievement in achievements:
+                print(f"  - {achievement}")
+        else:
+            print("\nNo special achievements earned this game.")
