@@ -422,4 +422,182 @@ class Game:
             
             if __name__ == '__main__':
                 unittest.main()
-            
+
+                import random
+import time
+
+# --- Member and Party Classes ---
+class Member:
+    def __init__(self, name, hp=10):
+        self.name = name
+        self.hp = hp
+
+    def is_alive(self):
+        return self.hp > 0
+
+    def take_damage(self, amount):
+        self.hp -= amount
+
+
+class Party:
+    def __init__(self):
+        self.members = [Member("Jon"), Member("Arya"), Member("Sansa")]
+        self.location = "Winterfell"
+        self.resources = {"gold": 100, "food": 50, "medicine": 20}
+        self.reputation = {"North": 30, "South": 15}
+
+    def is_alive(self):
+        return any(member.is_alive() for member in self.members)
+
+    def display_status(self):
+        print("\nParty Status:")
+        for member in self.members:
+            status = "Alive" if member.is_alive() else "Dead"
+            print(f"{member.name}: {member.hp} HP ({status})")
+        print(f"Resources: {self.resources}")
+
+
+# --- Event and EventManager Classes ---
+class Event:
+    def __init__(self, description, damage=0, reward=None):
+        self.description = description
+        self.damage = damage
+        self.reward = reward or {}
+
+    def execute(self, party):
+        print(self.description)
+        if self.damage:
+            print(f"Party takes {self.damage} damage!")
+            for member in party.members:
+                if member.is_alive():
+                    member.take_damage(self.damage)
+        for resource, amount in self.reward.items():
+            party.resources[resource] += amount
+            print(f"Party gains {amount} {resource}.")
+
+
+class EventManager:
+    def __init__(self):
+        self.events = [
+            Event("You are ambushed by bandits!", damage=2),
+            Event("You find an abandoned cart with supplies.", reward={"food": 10, "gold": 20}),
+            Event("A storm slows your travel.", damage=1)
+        ]
+
+    def get_random_event(self):
+        return random.choice(self.events)
+
+
+# --- Game Class ---
+class Game:
+    def __init__(self, party):
+        self.party = party
+        self.turn = 1
+        self.max_turns = 30
+        self.event_manager = EventManager()
+        self.game_over = False
+        self.locations = [
+            "Winterfell", "King's Landing", "The Wall", "Riverrun",
+            "Casterly Rock", "The Eyrie", "Dragonstone", "Highgarden",
+            "Dorne", "The Iron Islands", "Braavos"
+        ]
+        self.mock_input = iter(["y", "n", "y", "1", "0"])  # Mock inputs
+
+    def start(self):
+        while not self.game_over and self.turn <= self.max_turns:
+            self._process_turn()
+
+            if not self.party.is_alive():
+                self._end_game("Your entire party has perished. Winter has come for you.")
+                break
+
+            if self.turn > self.max_turns:
+                self._end_game("You have survived to see the coming of spring.")
+                break
+
+            try:
+                choice = next(self.mock_input).lower()
+            except StopIteration:
+                choice = "n"
+
+            if choice != 'y':
+                self._end_game("You have chosen to end your journey.")
+                break
+
+            self.turn += 1
+
+    def _process_turn(self):
+        self._display_turn_info()
+        self._consume_resources()
+        self._travel_option()
+        self._random_event()
+        self.party.display_status()
+
+    def _display_turn_info(self):
+        print("\n" + "=" * 50)
+        print(f"TURN {self.turn} | Location: {self.party.location}")
+        print("=" * 50)
+
+        winter_progress = min(100, (self.turn / self.max_turns) * 100)
+        print(f"Winter is {winter_progress:.1f}% here...")
+        print(f"Party: {len([m for m in self.party.members if m.is_alive()])}/{len(self.party.members)} members alive")
+        print(f"Resources: Gold {self.party.resources['gold']}, Food {self.party.resources['food']}, Medicine {self.party.resources['medicine']}")
+        print("=" * 50 + "\n")
+
+    def _consume_resources(self):
+        food_needed = len(self.party.members) // 2 + 1
+        print(f"Your party requires {food_needed} food for this turn.")
+        if self.party.resources['food'] >= food_needed:
+            self.party.resources['food'] -= food_needed
+            print("Your party eats well.")
+        else:
+            print("You don't have enough food! Party members take damage from hunger.")
+            for member in self.party.members:
+                if member.is_alive():
+                    member.take_damage(1)
+                    print(f"{member.name} takes 1 damage from hunger.")
+
+    def _travel_option(self):
+        print("\nWould you like to travel to a new location?")
+        choice = next(self.mock_input, "n").lower()
+        if choice == 'y':
+            possible_destinations = [loc for loc in self.locations if loc != self.party.location]
+            destinations = random.sample(possible_destinations, min(3, len(possible_destinations)))
+
+            print("\nChoose a destination:")
+            for i, destination in enumerate(destinations, 1):
+                print(f"{i}. {destination}")
+            travel_choice = int(next(self.mock_input, "0"))
+            if 1 <= travel_choice <= len(destinations):
+                new_location = destinations[travel_choice - 1]
+                print(f"\nTraveling to {new_location}...")
+                if random.random() < 0.3:
+                    print("Your journey is interrupted!")
+                    danger_event = self.event_manager.get_random_event()
+                    danger_event.execute(self.party)
+                self.party.location = new_location
+                print(f"You have arrived at {new_location}.")
+            else:
+                print("\nDeciding to stay at your current location.")
+        else:
+            print("\nYou decide to stay at your current location.")
+
+    def _random_event(self):
+        print("\nAn event occurs...")
+        time.sleep(1)
+        event = self.event_manager.get_random_event()
+        event.execute(self.party)
+
+    def _end_game(self, message):
+        print("\n" + "=" * 50)
+        print("GAME OVER")
+        print("=" * 50)
+        print(message)
+        self.game_over = True
+
+
+if __name__ == "__main__":
+    party = Party()
+    game = Game(party)
+    game.start()
+
